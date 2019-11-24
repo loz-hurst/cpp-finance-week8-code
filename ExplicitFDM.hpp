@@ -35,7 +35,7 @@ namespace ExplicitFdm {
      *   s_max - maximum possible spot price (in theory could be infinity but needs to be bounded to calculate).
      *   out_str - stream to write the calculated values into (comma separated)
      */
-    void Calculate(const BlackScholes::Data &, const double s_max, std::ostream & out_str);
+    void Calculate(const BlackScholes::Data &, double s_max, std::ostream & out_str);
 }
 
 #endif //CPP_FINANCE_WEEK8_CODE_EXPLICITFDM_HPP

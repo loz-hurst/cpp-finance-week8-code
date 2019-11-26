@@ -120,7 +120,7 @@ namespace ImplicitFdm {
             // upper boundary (going backwards)
             out_str << (data.maturity-(i*delta_t)) << ',' << s_max << ','<< ((reading_payoffs_1) ? values_time_2.at(s_steps-1) : values_time_1.at(s_steps-1)) << "\n";
             // Remember we have to go backwards for this
-            for (int j {s_steps-2}; 0<j; --j) {
+            for (int j {s_steps-2}; 0<=j; --j) {
                 // C^{j-1}_i=(z_i-u_iC^{j-1}_{i+1})/d_i
                 // u_i = gamma_i
                 double result {(z.at(j)-gamma.at(j)*((reading_payoffs_1) ? values_time_2.at(j+1) : values_time_1.at(j+1)))/d.at(j)};
@@ -134,8 +134,6 @@ namespace ImplicitFdm {
                 // Store the result (x (time), y (spot), z (value)
                 out_str << (data.maturity-(i*delta_t)) << ',' << j*delta_s << ','<< ((reading_payoffs_1) ? values_time_2.at(j) : values_time_1.at(j)) << "\n";
             }
-            // lower boundary (going backwards)
-            out_str << (data.maturity-(i*delta_t)) << ',' << 0 << ','<< ((reading_payoffs_1) ? values_time_2.at(0) : values_time_1.at(0)) << "\n";
 
             // End of loop - the result we've just filled should now be the 'old' one, so flip which one we're using
             reading_payoffs_1 = !reading_payoffs_1;

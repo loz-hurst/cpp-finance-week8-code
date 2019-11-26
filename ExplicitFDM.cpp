@@ -29,39 +29,12 @@
 #include <iostream>
 #include <vector>
 
-namespace {
-    void square_step_count (const BlackScholes::Data & data, const double s_max, int & time_steps, int & spot_steps) {
-        // Find a grid with square discretisation points (it doesn't have to be)
-
-        // For the grid-squares to be equal in both dimensions we need to find the total distance to cover on each axis
-        const double total_delta_t {data.maturity}; // time 0 to T
-        const double total_delta_s {s_max}; // price will be in range 0 to s_max
-
-        // Stable solution requires sigma^2*(delta_t/delta_s^2) < 0.5
-        // For square grids, delta_t = delta_x (= x, here:) so sigma^2*(x/x^2) < 0.5.
-        // Rearrange for x: x > 2*sigma^2
-        double result {2*data.sigma*data.sigma*1.001}; // Ensure the result is > the limit by 0.1%
-
-        time_steps = (int)(total_delta_t/result);
-        spot_steps = (int)(total_delta_s/result);
-    }
-}
-
 namespace ExplicitFdm {
 
-    void Calculate(const BlackScholes::Data & data, const double s_max, std::ostream & out_str) {
-
-        int s_steps {0};
-        int t_steps {0};
-        ::square_step_count(data, s_max, t_steps, s_steps);
+    void Calculate(const BlackScholes::Data & data, const double s_max, const int s_steps, const int t_steps, std::ostream & out_str) {
 
         const double delta_s {s_max/s_steps};
         const double delta_t {data.maturity/t_steps};
-
-        std::cout << "There will be "
-                  << t_steps << " time steps and " << s_steps << " spot-price steps"
-                  << " of size " << delta_t << " and " << delta_s << " respectively"
-                  << std::endl;
 
         // Check the file's good
         if (! out_str.good() ) {
@@ -82,17 +55,17 @@ namespace ExplicitFdm {
          * Conveniently (or by design!) value at 0 is also 0 and is S_max-K at S_max, which happens to match the
          * boundary conditions for this initial case.
          */
-        for (int i {0}; i < (s_steps-1); ++i) {
+        for (int i {0}; i < s_steps; ++i) {
             // For each spot price point, calculate the value at that point
             values_time_1.at(i) = std::max(i * delta_s - data.strike, 0.0); // Standard payoff function at boundary
         }
 
         // Start looping
-        for (int i {1}; i < t_steps; ++i) {
+        for (int i {0}; i < t_steps; ++i) {
             // For each time step (conceptually starting at T-1 and going back to 0)
 
             // Set boundary values (which cannot be calculated due to lack of points outside the bounds of the solution
-            const double upper_bound {s_max - data.strike*std::exp(-data.rate*(data.maturity-i))}; // Smax−Ke−r(T−t) for call
+            const double upper_bound {s_max-data.strike};
             if (reading_payoffs_1) {
                 values_time_2.at(0) = 0; // 0 for call
                 values_time_2.at(s_steps-1) = upper_bound;
@@ -101,8 +74,11 @@ namespace ExplicitFdm {
                 values_time_1.at(s_steps-1) = upper_bound;
             }
 
+            // Output the bottom boundary
+            out_str << (data.maturity-(i*delta_t)) << ',' << 0 << ','<< ((reading_payoffs_1) ? values_time_2.at(0) : values_time_1.at(0)) << "\n";
+
             // For each spot price point, skipping the boundary points (0 and s_max), find values from the previous ones
-            for (int j {1}; j < (s_steps-1); ++j) {
+            for (int j {1}; j < s_steps-1; ++j) {
                 // Calculate the value at the next price point
 
                 // Start with co-efficients
@@ -122,8 +98,10 @@ namespace ExplicitFdm {
                 }
 
                 // Store the result (x (time), y (spot price), val)
-                out_str << i*delta_t << ',' << j*delta_s << ','<< ((reading_payoffs_1) ? values_time_2.at(j) : values_time_1.at(j)) << "\n";
+                out_str << (data.maturity-(i*delta_t)) << ',' << j*delta_s << ','<< ((reading_payoffs_1) ? values_time_2.at(j) : values_time_1.at(j)) << "\n";
             }
+            // Output the top boundary
+            out_str << (data.maturity-(i*delta_t)) << ',' << s_max << ','<< ((reading_payoffs_1) ? values_time_2.at(s_steps-1) : values_time_1.at(s_steps-1)) << "\n";
 
             /* Now we have gone down all value of spot price - and flip to using the other vector as 'old'
              * (avoids copying 'new' -> 'old', for efficiency)

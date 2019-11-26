@@ -27,21 +27,31 @@
 #include <string>
 #include "BlackScholes.hpp"
 #include "ExplicitFDM.hpp"
+#include "ImplicitFDM.hpp"
 
 int main() {
-    const std::string filename {"../explicit.csv"};
+    const std::string ex_filename {"../explicit.csv"};
+    const std::string im_filename {"../implicit.csv"};
     const double s_max {1}; // Upper bound on spot price
 
     // rate, sigma, maturity, strike, type
     BlackScholes::Data data {0.05, 0.2, 1, 0.5, BlackScholes::OptionType::EurCall};
 
-    std::ofstream explicit_result {filename};
+    std::ofstream explicit_result {ex_filename};
     if (explicit_result.good()) {
-        ExplicitFdm::Calculate(data, s_max, explicit_result);
+        ExplicitFdm::Calculate(data, s_max, 15, 15, explicit_result);
         explicit_result.close();
     } else {
-        std::cerr << "Unable to open " << filename << std::endl;
+        std::cerr << "Unable to open " << ex_filename << std::endl;
     }
-    std::cout << "Hello, World!" << std::endl;
+
+    std::ofstream implicit_result {im_filename};
+    if (implicit_result.good()) {
+        ImplicitFdm::Calculate(data, s_max, 20, 20, implicit_result);
+        implicit_result.close();
+    } else {
+        std::cerr << "Unable to open " << im_filename << std::endl;
+    }
+
     return 0;
 }

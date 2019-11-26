@@ -22,20 +22,23 @@
  * full licence.
  */
 
-#ifndef CPP_FINANCE_WEEK8_CODE_EXPLICITFDM_HPP
-#define CPP_FINANCE_WEEK8_CODE_EXPLICITFDM_HPP
+#ifndef CPP_FINANCE_WEEK8_CODE_IMPLICITFDM_HPP
+#define CPP_FINANCE_WEEK8_CODE_IMPLICITFDM_HPP
 
-#include <ostream>
 #include "BlackScholes.hpp"
+#include <ostream>
 
-namespace ExplicitFdm {
-    /* Calculate the Black-Scholes PDE using explicit FDM
+namespace ImplicitFdm {
+    /* Calculate the Black-Scholes PDE using implicit FDM
      * Arguments:
      *   BlackScholes data for the option
      *   s_max - maximum possible spot price (in theory could be infinity but needs to be bounded to calculate).
+     *   s_steps - number of spot prices to calculate between 0 and s_max
+     *   t_steps - number of time steps to calculate between 0 and data.maturity (i.e. T)
      *   out_str - stream to write the calculated values into (comma separated)
      */
     void Calculate(const BlackScholes::Data &, double s_max, int s_steps, int t_steps, std::ostream & out_str);
+
 }
 
-#endif //CPP_FINANCE_WEEK8_CODE_EXPLICITFDM_HPP
+#endif //CPP_FINANCE_WEEK8_CODE_IMPLICITFDM_HPP
